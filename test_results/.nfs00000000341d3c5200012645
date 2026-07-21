@@ -1,0 +1,2 @@
+pdb_name,processed_path,raw_path,num_chains,quaternary_category,num_protein_chains,num_na_chains,seq_len,na_seq_len,modeled_seq_len,modeled_protein_seq_len,modeled_na_seq_len,coil_percent,helix_percent,strand_percent,radius_gyration
+2OIU,/home/hjliu/project/rna-backbone-design/test_results/oi/2OIU.pkl,test/2OIU.pdb,2,homomer,0,2,142,142,142,0,142,,,,

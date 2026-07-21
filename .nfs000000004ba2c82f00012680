@@ -1,0 +1,16 @@
+import pickle
+import numpy as np
+
+
+with open("/home/hjliu/project/rna-backbone-design/test_results/oi/2OIU.pkl", "rb") as f:
+    data = pickle.load(f)
+
+
+mat = data["atom_positions"]  
+print(type(mat)) 
+print(mat.shape)   
+print(mat)   
+
+for  k , v in data.items():
+    print (k , v.shape)
+    

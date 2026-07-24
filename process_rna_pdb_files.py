@@ -135,8 +135,6 @@ def process_file(
             new_all_chain_dict[f"{utils.int_id_to_str_id(entity_id)}_{sym_id}"] = chain_dict
             seq_length = len(chain_dict["aatype"])
             chain_dict["chain_index"] = chain_id * np.ones(seq_length)
-            chain_dict["sym_id"] = sym_id * np.ones(seq_length)
-            chain_dict["entity_id"] = entity_id * np.ones(seq_length)
             chain_id += 1
 
     # Concatenate all collected features

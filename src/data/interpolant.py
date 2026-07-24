@@ -1,7 +1,7 @@
 import torch, copy
-from rna_backbone_design.data import so3_utils
-from rna_backbone_design.data import utils as du
-from rna_backbone_design.data import all_atom as rna_all_atom
+from src.data import so3_utils
+from src.data import utils as du
+from src.data import all_atom as rna_all_atom
 
 from scipy.spatial.transform import Rotation
 from scipy.optimize import linear_sum_assignment
@@ -9,7 +9,7 @@ from scipy.optimize import linear_sum_assignment
 def _centered_gaussian(num_batch, num_res, device):
     # returns randomly-sampled zero-centered Gaussian noise for translations
     noise = torch.randn(num_batch, num_res, 3, device=device)
-    return noise - torch.mean(noise, dim=-2, keepdims=True)
+    return noise - torch.mean(noise, dim=-2, keepdim=True)
 
 def _uniform_so3(num_batch, num_res, device):
     # returns uniformly-sampled rotations (from U(SO(3)))
@@ -48,13 +48,13 @@ class Interpolant:
         self._device = device
 
     def sample_t(self, num_batch):
-       """
-       Sample random timestep for flow matching
-       """
-       t = torch.rand(num_batch, device=self._device)
-       return t * (1 - 2*self._cfg.min_t) + self._cfg.min_t
+        """
+        Sample random timestep for flow matching
+        """
+        t = torch.rand(num_batch, device=self._device)
+        return t * (1 - 2*self._cfg.min_t) + self._cfg.min_t
 
-    def _corrupt_trans(self, trans_1, t, res_mask, diffuse_mask): 'change'
+    def _corrupt_trans(self, trans_1, t, res_mask, diffuse_mask):
         """
         Returns optimal transport-based interpolated "flow" for translations
         """
@@ -144,7 +144,7 @@ class Interpolant:
         rotmats_t = self._corrupt_rotmats(rotmats_1, t, res_mask)
         noisy_batch['rotmats_t'] = rotmats_t
         
-        noisy_batch['ss'] = batch['ss']   'change'
+        noisy_batch['ss'] = batch['ss']   
 
         return noisy_batch
     

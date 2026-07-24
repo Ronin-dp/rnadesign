@@ -44,8 +44,6 @@ CHAIN_FEATS = [
     "residue_index",
     "b_factors",
     "chain_index",
-    "sym_id",
-    "entity_id",
 ]
 UNPADDED_FEATS = [
     "t",

@@ -126,12 +126,10 @@ def atom27_to_frames(na, eps=1e-8):
     aatype = na["aatype"].clone()
     all_atom_positions = na["all_atom_positions"] # in ATOM27 format
     all_atom_mask = na["all_atom_mask"] # NOTE: [1]_i if atom i exists in the residue's molecular structure (out of 27)
-    na_deoxy = na["atom_deoxy"]
 
     assert (
-        21 <= aatype.min() <= aatype.max() <= 26
+        21 <= aatype.min() <= aatype.max() <= 28
     ), "Only nucleic acid residue inputs are allowed in `atom27_to_frames()`."
-    aatype = convert_na_aatype6_to_aatype9(aatype, deoxy_offset_mask=na_deoxy)
 
     batch_dims = len(aatype.shape[:-1])
     # 9 NT types (i.e., DA, DC, DG, DT, A, C, G, U, plus x for missing residues), 11 groups
@@ -235,9 +233,8 @@ def make_atom23_masks(na):
     restype_atom23_mask = []
 
     na_aatype = na["aatype"].to(torch.long).clone()
-    na_deoxy = na["atom_deoxy"].to(torch.bool)
     assert (
-        21 <= na_aatype.min() <= na_aatype.max() <= 26
+        21 <= na_aatype.min() <= na_aatype.max() <= 29
     ), "Only nucleic acid residue inputs are allowed in `make_atom23_masks()`."
 
     for nt in nc.restypes:
@@ -277,9 +274,8 @@ def make_atom23_masks(na):
     )
 
     assert (
-        21 <= na_aatype.min() <= na_aatype.max() <= 26
+        21 <= na_aatype.min() <= na_aatype.max() <= 29
     ), "Only nucleic acid residue inputs are allowed in `make_atom23_masks()`."
-    na_aatype = convert_na_aatype6_to_aatype9(na_aatype, deoxy_offset_mask=na_deoxy)
 
     # create the mapping for (residx, atom23) --> atom27, i.e. an array
     # with shape (num_res, 23) containing the atom27 indices for this protein
@@ -365,12 +361,10 @@ def atom27_to_torsion_angles(na, prefix="", randomly_noise_torsion_atoms_to_plac
     aatype = na[prefix + "aatype"]
     all_atom_positions = na[prefix + "all_atom_positions"]
     all_atom_mask = na[prefix + "all_atom_mask"]
-    na_deoxy = na["atom_deoxy"]
 
     assert (
-        21 <= aatype.max() <= 26
+        21 <= aatype.max() <= 29
     ), "Only nucleic acid residue inputs are allowed in `atom27_to_torsion_angles()`."
-    aatype = convert_na_aatype6_to_aatype9(aatype, deoxy_offset_mask=na_deoxy)
 
     chi_atom_indices = torch.as_tensor(get_chi_atom_indices("NA"), device=aatype.device)
 

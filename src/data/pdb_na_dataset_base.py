@@ -11,9 +11,9 @@ from beartype.typing import Optional
 from omegaconf import DictConfig
 from torch.utils.data import Dataset
 
-from rna_backbone_design.data import data_transforms
-from rna_backbone_design.data import utils as du
-from rna_backbone_design.data import rigid_utils
+from src.data import data_transforms
+from src.data import utils as du
+from src.data import rigid_utils
 
 NUM_NA_RESIDUE_ATOMS = 23
 
@@ -139,7 +139,6 @@ class PDBNABaseDataset(Dataset):
                 "aatype": torch.tensor(processed_feats["aatype"]).long(),
                 "all_atom_positions": torch.tensor(processed_feats["atom_positions"]).double(),
                 "all_atom_mask": torch.tensor(processed_feats["atom_mask"]).double(),
-                "atom_deoxy": torch.tensor(processed_feats["atom_deoxy"]).bool(),
             },
             {},
         )
@@ -153,7 +152,6 @@ class PDBNABaseDataset(Dataset):
                 "all_atom_mask": chain_feats["all_atom_mask"][
                     processed_feats["is_na_residue_mask"]
                 ][:, :NUM_NA_RESIDUE_ATOMS],
-                "atom_deoxy": chain_feats["atom_deoxy"][processed_feats["is_na_residue_mask"]],
             }
             na_chain_feats["atom23_gt_positions"] = na_chain_feats[
                 "all_atom_positions"

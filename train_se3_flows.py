@@ -10,7 +10,6 @@ import torch
 import hydra
 from omegaconf import DictConfig, OmegaConf
 
-from pytorch_lightning import Trainer
 from pytorch_lightning.loggers.wandb import WandbLogger
 from pytorch_lightning.trainer import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint, Timer

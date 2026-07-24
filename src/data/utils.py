@@ -66,7 +66,6 @@ COMPLEX_FEATURE_CONCAT_MAP = {
     # note: follows the format `(protein_feature_name, na_feature_name, complex_feature_name, padding_dim): max_feature_dim_size`
     ("all_atom_positions", "all_atom_positions", "all_atom_positions", 1): 37,
     ("all_atom_mask", "all_atom_mask", "all_atom_mask", 1): 37,
-    ("atom_deoxy", "atom_deoxy", "atom_deoxy", 0): 0,
     ("residx_atom14_to_atom37", "residx_atom23_to_atom27", "residx_atom23_to_atom37", 1): 23,
     ("atom14_gt_positions", "atom23_gt_positions", "atom23_gt_positions", 1): 23,
     ("rigidgroups_gt_frames", "rigidgroups_gt_frames", "rigidgroups_gt_frames", 1): 11,

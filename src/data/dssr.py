@@ -82,3 +82,16 @@ def dbn_to_matrix(dbn):
 
 
     return ss
+
+def to_pair_list(dbn):
+    pairs = []
+    stack = []
+
+    for i, c in enumerate(dbn):
+        if c == "(":
+            stack.append(i)
+        elif c == ")":
+            j = stack.pop()
+            pairs.append((j, i))
+
+    return pairs

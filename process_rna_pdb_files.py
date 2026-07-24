@@ -117,11 +117,6 @@ def process_file(
             print (f"No chains were found for PDB {file_path}. Skipping...")
         return None
     
-    if len(all_seqs) == 1:
-        metadata["quaternary_category"] = "homomer"
-    else:
-        metadata["quaternary_category"] = "heteromer"
-
     # Add assembly features from AlphaFold-Multimer,
     # relying on references to each `chain_dict` object
     # to propagate back to the contents of `struct_feats` below
@@ -150,12 +145,12 @@ def process_file(
     from src.data.dssr import (
     run_dssr,
     extract_dbn,
-    dbn_to_matrix
+    to_pair_list
     )
     dssr_result = run_dssr(file_path)
     dbn = extract_dbn(dssr_result)
-    ss_matrix = dbn_to_matrix(dbn)
-    complex_feats["ss"] = ss_matrix
+    complex_feats["ss"] = to_pair_list(dbn)
+    complex_feats["residue_index"] = np.arange(len(complex_feats["aatype"]))
     pdb_ss = None
     pdb_rg = None
 

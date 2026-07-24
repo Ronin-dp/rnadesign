@@ -70,7 +70,6 @@ class PDBNABaseDataset(Dataset):
         pdb_csv = pdb_csv[pdb_csv.modeled_na_seq_len <= filter_conf.max_len]
         pdb_csv = pdb_csv[pdb_csv.modeled_na_seq_len >= filter_conf.min_len]
 
-        pdb_csv = pdb_csv[pdb_csv.quaternary_category == "homomer"] # ignore multimers
         pdb_csv = pdb_csv[pdb_csv.num_protein_chains == 0] # remove proteins
         pdb_csv = pdb_csv.sort_values("modeled_na_seq_len", ascending=False)
         # pdb_csv.reset_index(inplace=True) # reset the index to ensure samples are taken within proper bounds
@@ -97,6 +96,30 @@ class PDBNABaseDataset(Dataset):
     def _process_csv_row(self, processed_file_path):
         processed_feats = du.read_pkl(processed_file_path)
         processed_feats = du.parse_complex_feats(processed_feats)
+
+        # `ss` may be stored as a pair list or as an older dense/flattened matrix.
+        # Restore it to an [L, L] matrix before any length-based slicing.
+        ss = processed_feats.pop("ss", None)
+        if ss is not None:
+            seq_len = processed_feats["aatype"].shape[0]
+            ss = np.asarray(ss)
+            if ss.ndim == 1 and ss.size == seq_len * seq_len:
+                ss = ss.reshape(seq_len, seq_len)
+            elif ss.ndim == 1 and ss.size == 0:
+                ss = np.zeros((seq_len, seq_len), dtype=np.float32)
+            elif ss.ndim == 2 and ss.shape == (seq_len, seq_len):
+                ss = ss.astype(np.float32, copy=False)
+            elif ss.ndim == 2 and ss.shape[-1] == 2:
+                ss_matrix = np.zeros((seq_len, seq_len), dtype=np.float32)
+                if ss.shape[0] > 0:
+                    pair_idx = ss.astype(np.int64, copy=False)
+                    ss_matrix[pair_idx[:, 0], pair_idx[:, 1]] = 1.0
+                    ss_matrix[pair_idx[:, 1], pair_idx[:, 0]] = 1.0
+                ss = ss_matrix
+            elif ss.shape != (seq_len, seq_len):
+                raise ValueError(
+                    f"Invalid ss shape {ss.shape}; expected a pair list, flat vector, or {(seq_len, seq_len)} matrix."
+                )
 
         # Designate which residues to diffuse and which to fix. By default, diffuse all residues
         diffused_mask = np.ones_like(processed_feats["bb_mask"])
@@ -129,9 +152,8 @@ class PDBNABaseDataset(Dataset):
             del processed_feats["na_modeled_idx"]
        
         processed_feats = tree.map_structure(lambda x: x[min_idx : (max_idx + 1)], processed_feats)
-        inter_chain_interacting_residue_mask = inter_chain_interacting_residue_mask[
-            min_idx : (max_idx + 1)
-        ]
+        if ss is not None:
+            ss = ss[min_idx : (max_idx + 1), min_idx : (max_idx + 1)]
 
         # Run through OpenFold data transforms.
         chain_feats, na_chain_feats = (
@@ -179,6 +201,8 @@ class PDBNABaseDataset(Dataset):
             "torsion_angles_sin_cos": chain_feats["torsion_angles_sin_cos"],
             "is_na_residue_mask": processed_feats["is_na_residue_mask"]
         }
+        if ss is not None:
+            final_feats["ss"] = ss
 
         rigids_1 = rigid_utils.Rigid.from_tensor_4x4(
                                         chain_feats["rigidgroups_gt_frames"]

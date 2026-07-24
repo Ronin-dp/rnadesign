@@ -13,16 +13,16 @@ import pandas as pd
 import logging
 from pytorch_lightning import LightningModule
 
-from rna_backbone_design.analysis import metrics
-from rna_backbone_design.analysis import utils as au
-from rna_backbone_design.models.flow_model import FlowModel
-from rna_backbone_design.models import utils as mu
-from rna_backbone_design.data.interpolant import Interpolant 
-from rna_backbone_design.data import utils as du
-from rna_backbone_design.data import all_atom as rna_all_atom
-from rna_backbone_design.data import so3_utils
-from rna_backbone_design.data import nucleotide_constants
-from rna_backbone_design.analysis import utils as au
+from src.analysis import metrics
+from src.analysis import utils as au
+from src.models.flow_model import FlowModel
+from src.models import utils as mu
+from src.data.interpolant import Interpolant 
+from src.data import utils as du
+from src.data import all_atom as rna_all_atom
+from src.data import so3_utils
+from src.data import nucleotide_constants
+from src.analysis import utils as au
 from pytorch_lightning.loggers.wandb import WandbLogger
 
 class FlowModule(LightningModule):

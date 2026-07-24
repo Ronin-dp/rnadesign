@@ -55,7 +55,7 @@ UNPADDED_FEATS = [
     "t_struct",
 ]
 RIGID_FEATS = ["rigids_0", "rigids_t"]
-PAIR_FEATS = ["rel_rots"]
+PAIR_FEATS = ["rel_rots", "ss"]
 
 MAX_NUM_ATOMS_PER_RESIDUE = (
     23  # note: `23` comes from the maximum number of atoms in a nucleic acid

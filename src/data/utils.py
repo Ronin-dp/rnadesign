@@ -43,7 +43,7 @@ CHAIN_FEATS = [
     "atom_mask",
     "residue_index",
     "b_factors",
-    "asym_id",
+    "chain_index",
     "sym_id",
     "entity_id",
 ]
@@ -60,7 +60,7 @@ PAIR_FEATS = ["rel_rots"]
 MAX_NUM_ATOMS_PER_RESIDUE = (
     23  # note: `23` comes from the maximum number of atoms in a nucleic acid
 )
-RESIDUE_ATOM_FEATURES_AXIS_MAPPING = {"atom_positions": -2, "atom_mask": -1, "atom_b_factors": -1}
+RESIDUE_ATOM_FEATURES_AXIS_MAPPING = {"atom_positions": -2, "atom_mask": -1}
 
 COMPLEX_FEATURE_CONCAT_MAP = {
     # note: follows the format `(protein_feature_name, na_feature_name, complex_feature_name, padding_dim): max_feature_dim_size`

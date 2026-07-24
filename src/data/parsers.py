@@ -138,7 +138,6 @@ def macromolecule_outputs_to_dict(outputs: MACROMOLECULE_OUTPUTS_TYPE) -> Dict[s
         "atom_mask": outputs[3]["atom_mask"].numpy(),
         "atom_chain_indices": outputs[3]["chain_indices"].numpy(),
         "atom_deoxy": outputs[3]["deoxy"].numpy(),
-        "atom_b_factors": outputs[3]["b_factors"].numpy(),
         "molecule_type_encoding": outputs[3]["molecule_type_encoding"].numpy(),
     }
     return outputs_dict

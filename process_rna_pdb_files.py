@@ -134,12 +134,12 @@ def process_file(
         grouped_chains[seq_to_entity_id[seq]].append(chain_dict)
 
     new_all_chain_dict = {}
-    chain_id = 1
+    chain_id = 0
     for entity_id, group_chain_features in grouped_chains.items():
         for sym_id, chain_dict in enumerate(group_chain_features, start=1):
             new_all_chain_dict[f"{utils.int_id_to_str_id(entity_id)}_{sym_id}"] = chain_dict
             seq_length = len(chain_dict["aatype"])
-            chain_dict["asym_id"] = chain_id * np.ones(seq_length)
+            chain_dict["chain_index"] = chain_id * np.ones(seq_length)
             chain_dict["sym_id"] = sym_id * np.ones(seq_length)
             chain_dict["entity_id"] = entity_id * np.ones(seq_length)
             chain_id += 1
@@ -176,9 +176,9 @@ def process_file(
     # metadata["protein_seq_len"] = 0 if protein_aatype is None else len(protein_aatype)
     metadata["na_seq_len"] = 0 if na_natype is None else len(na_natype)
     # Note: Residue indices `20` and `26`, respectively, correspond to missing protein and nucleic acid residue types
-    modeled_idx = np.where((complex_aatype != 20) & (complex_aatype != 26))[0]
+    modeled_idx = np.where((complex_aatype != 20) & (complex_aatype != 29))[0]
     # protein_modeled_idx = None if protein_aatype is None else np.where(protein_aatype != 20)[0]
-    na_modeled_idx = None if na_natype is None else np.where(na_natype != 26)[0]
+    na_modeled_idx = None if na_natype is None else np.where(na_natype != 29)[0]
     if np.sum((complex_aatype != 20) & (complex_aatype != 26)) == 0:
         raise utils.LengthError("No modeled residues")
     metadata["modeled_seq_len"] = np.max(modeled_idx) - np.min(modeled_idx) + 1

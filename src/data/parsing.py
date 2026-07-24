@@ -70,10 +70,15 @@ def structure_to_XCS(
                     )
                     break
 
-            res_shortname = vocabulary.restype_3to1.get(
-                res.resname, vocabulary.unknown_protein_restype
-            )
-            restype_idx = vocabulary.restype_order.get(res_shortname)
+            if hasattr(constants, 'restypes') and res.resname in constants.restypes:
+                restype_idx = constants.restype_order.get(res.resname, constants.unk_restype_index) + 21
+            else:
+                res_shortname = vocabulary.restype_3to1.get(
+                    res.resname, vocabulary.unknown_protein_restype
+                )
+                restype_idx = vocabulary.restype_order.get(res_shortname)
+                if restype_idx is None:
+                    restype_idx = 20
             pos = np.zeros((constants.compact_atom_type_num, 3))
             mask = np.zeros((constants.compact_atom_type_num,))
             res_b_factors = np.zeros((constants.compact_atom_type_num,))

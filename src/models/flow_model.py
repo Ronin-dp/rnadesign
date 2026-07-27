@@ -7,11 +7,6 @@ from src.data import utils as du
 from src.models.ipa_pytorch import InvariantPointAttention, StructureModuleTransition, BackboneUpdate, EdgeTransition, Linear
 from src.models.edge_embedder import EdgeEmbedder
 
-from flash_ipa.utils import check_config_ipa
-from flash_ipa.edge_embedder import EdgeEmbedder as FlashEdgeEmbedder
-from flash_ipa.ipa import InvariantPointAttention as FlashInvariantPointAttention, StructureModuleTransition as FlashStructureModuleTransition, BackboneUpdate as FlashBackboneUpdate, EdgeTransition as FlashEdgeTransition
-from flash_ipa.linear import Linear as FlashLinear
-
 class FlowModel(nn.Module):
 
     def __init__(self, model_conf):
@@ -21,23 +16,12 @@ class FlowModel(nn.Module):
         self.rigids_ang_to_nm = lambda x: x.apply_trans_fn(lambda x: x * du.ANG_TO_NM_SCALE)
         self.rigids_nm_to_ang = lambda x: x.apply_trans_fn(lambda x: x * du.NM_TO_ANG_SCALE) 
         self.node_embedder = NodeEmbedder(model_conf.node_features)
-
-        self.use_flashipa = model_conf.use_flashipa
-        if self.use_flashipa:
-        # Check variables are consistent for experiment.
-            check_config_ipa(model_conf.ipa, model_conf.mode)
-            self.mode = model_conf.mode
-            self.edge_embedder = FlashEdgeEmbedder(model_conf.edge_features)
-        else:
-            self.edge_embedder = EdgeEmbedder(model_conf.edge_features)
+        self.edge_embedder = EdgeEmbedder(model_conf.edge_features)
 
         # Attention trunk
         self.trunk = nn.ModuleDict()
         for b in range(self._ipa_conf.num_blocks):
-            if self.use_flashipa:
-                self.trunk[f'ipa_{b}'] = FlashInvariantPointAttention(self._ipa_conf)
-            else:
-                self.trunk[f'ipa_{b}'] = InvariantPointAttention(self._ipa_conf)
+            self.trunk[f'ipa_{b}'] = InvariantPointAttention(self._ipa_conf)
             self.trunk[f'ipa_ln_{b}'] = nn.LayerNorm(self._ipa_conf.c_s)
             tfmr_in = self._ipa_conf.c_s
             tfmr_layer = torch.nn.TransformerEncoderLayer(
@@ -50,38 +34,21 @@ class FlowModel(nn.Module):
             )
             self.trunk[f'seq_tfmr_{b}'] = torch.nn.TransformerEncoder(
                 tfmr_layer, self._ipa_conf.seq_tfmr_num_layers, enable_nested_tensor=False)
-            if self.use_flashipa:
-                self.trunk[f'post_tfmr_{b}'] = FlashLinear(
-                    tfmr_in, self._ipa_conf.c_s, init="final")
-                self.trunk[f'node_transition_{b}'] = FlashStructureModuleTransition(
-                    c=self._ipa_conf.c_s)
-                self.trunk[f'bb_update_{b}'] = FlashBackboneUpdate(
-                    self._ipa_conf.c_s, use_rot_updates=True)
-            else:
-                self.trunk[f'post_tfmr_{b}'] = Linear(
-                    tfmr_in, self._ipa_conf.c_s, init="final")
-                self.trunk[f'node_transition_{b}'] = StructureModuleTransition(
-                    c=self._ipa_conf.c_s)
-                self.trunk[f'bb_update_{b}'] = BackboneUpdate(
-                    self._ipa_conf.c_s, use_rot_updates=True)
+            self.trunk[f'post_tfmr_{b}'] = Linear(
+                tfmr_in, self._ipa_conf.c_s, init="final")
+            self.trunk[f'node_transition_{b}'] = StructureModuleTransition(
+                c=self._ipa_conf.c_s)
+            self.trunk[f'bb_update_{b}'] = BackboneUpdate(
+                self._ipa_conf.c_s, use_rot_updates=True)
 
             if b < self._ipa_conf.num_blocks-1:
                 # No edge update on the last block.
                 edge_in = self._model_conf.edge_embed_size
-                if self.use_flashipa:
-                    self.trunk[f'edge_transition_{b}'] = FlashEdgeTransition(
-                        mode="2d" if self.mode == "orig_2d_bias" else "1d",
-                        node_embed_size=self._ipa_conf.c_s,
-                        edge_embed_in=edge_in,
-                        edge_embed_out=self._model_conf.edge_embed_size,
-                        z_factor_rank=self._ipa_conf.z_factor_rank,
-                    )
-                else:
-                    self.trunk[f'edge_transition_{b}'] = EdgeTransition(
-                        node_embed_size=self._ipa_conf.c_s,
-                        edge_embed_in=edge_in,
-                        edge_embed_out=self._model_conf.edge_embed_size,
-                    )
+                self.trunk[f'edge_transition_{b}'] = EdgeTransition(
+                    node_embed_size=self._ipa_conf.c_s,
+                    edge_embed_in=edge_in,
+                    edge_embed_out=self._model_conf.edge_embed_size,
+                )
 
         # hparams taken from OpenFold's config.py
         self.angle_pred_net = torsion_net.TorsionAngleHead(c_in=self._ipa_conf.c_s, c_hidden=128, no_blocks=2, no_angles=8, epsilon=1e-12)
@@ -91,8 +58,8 @@ class FlowModel(nn.Module):
         continuous_t = input_feats['t']
         trans_t = input_feats['trans_t']
         rotmats_t = input_feats['rotmats_t']
-        chain_index = input_feats['chain_index']
-        residue_index = input_feats['residue_index']
+        chain_index = input_feats.get('chain_index', None)
+        residue_index = input_feats.get('residue_index', None)
         aatype = input_feats.get('aatype', None)
         use_aatype = bool(input_feats.get('use_aatype', False)) and aatype is not None
         ss = input_feats.get('ss', None)
@@ -112,15 +79,16 @@ class FlowModel(nn.Module):
         node_embed = init_node_embed * node_mask[..., None]
 
         # Compute edge embeddings from node embeddings and translations
-        if self.use_flashipa:
-            if ss is None:
-                raise ValueError(
-                    "FlowModel.forward requires 'ss' when use_flashipa=True."
-                )
-            edge_embed, z_factor_1, z_factor_2, edge_mask = self.edge_embedder(init_node_embed, trans_t, trans_sc, node_mask, chain_index, residue_index, ss)
-        else:
-            edge_mask = node_mask[:, None] * node_mask[:, :, None]
-            edge_embed = self.edge_embedder(init_node_embed, trans_t, trans_sc, edge_mask)
+        edge_mask = node_mask[:, None] * node_mask[:, :, None]
+        edge_embed = self.edge_embedder(
+            init_node_embed,
+            trans_t,
+            trans_sc,
+            edge_mask,
+            chain_index=chain_index,
+            residue_index=residue_index,
+            ss=ss,
+        )
 
         # Initial rigids
         curr_rigids = du.create_rigid(rotmats_t, trans_t,)
@@ -128,22 +96,12 @@ class FlowModel(nn.Module):
 
         # Main trunk
         for b in range(self._ipa_conf.num_blocks):
-            if self.use_flashipa:
-                ipa_embed = self.trunk[f'ipa_{b}'](
-                    node_embed,
-                    edge_embed, # Should be None for flash attn mode
-                    z_factor_1, # Should be None for not flash attn mode
-                    z_factor_2, # Should be None for not flash attn mode
-                    curr_rigids,
-                    node_mask,
-                )
-            else:
-                ipa_embed = self.trunk[f'ipa_{b}'](
-                    node_embed,
-                    edge_embed,
-                    curr_rigids,
-                    node_mask,
-                )
+            ipa_embed = self.trunk[f'ipa_{b}'](
+                node_embed,
+                edge_embed,
+                curr_rigids,
+                node_mask,
+            )
 
             ipa_embed *= node_mask[..., None]
             node_embed = self.trunk[f'ipa_ln_{b}'](node_embed + ipa_embed)
@@ -155,16 +113,8 @@ class FlowModel(nn.Module):
             curr_rigids = curr_rigids.compose_q_update_vec(rigid_update, node_mask[..., None])
 
             if b < self._ipa_conf.num_blocks-1:
-                if not self.use_flashipa or self.mode == "orig_2d_bias":
-                    edge_embed = self.trunk[f'edge_transition_{b}'](node_embed, edge_embed)  # edge_embed is B,L,L,D
-                    edge_embed *= edge_mask[..., None]
-                elif self.mode == "flash_1d_bias" or self.mode == "flash_2d_factorize_bias":
-                    z_factor_1, z_factor_2 = self.trunk[f"edge_transition_{b}"](node_embed, None, z_factor_1, z_factor_2)
-                    z_factor_1 *= node_mask[:, :, None, None]
-                    z_factor_2 *= node_mask[:, :, None, None]
-                else:
-                    # no bias
-                    continue
+                edge_embed = self.trunk[f'edge_transition_{b}'](node_embed, edge_embed)  # edge_embed is B,L,L,D
+                edge_embed *= edge_mask[..., None]
 
         # predict 8 torsions
         _, pred_torsions = self.angle_pred_net(node_embed, init_node_embed)

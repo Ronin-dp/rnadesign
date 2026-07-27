@@ -63,8 +63,15 @@ class EdgeEmbedder(nn.Module):
             torch.tile(feats_1d[:, None, :, :], (1, num_res, 1, 1)),
         ], dim=-1).float().reshape([num_batch, num_res, num_res, -1])
 
-    def forward(self, s, t, sc_t, p_mask, chain_index, residue_index, ss):
+    def forward(self, s, t, sc_t, p_mask, chain_index=None, residue_index=None, ss=None):
         num_batch, num_res, _ = s.shape
+
+        if chain_index is None:
+            chain_index = torch.zeros(num_batch, num_res, device=s.device, dtype=torch.long)
+        if residue_index is None:
+            residue_index = torch.arange(num_res, device=s.device, dtype=torch.long)[None].repeat(num_batch, 1)
+        if ss is None:
+            ss = torch.zeros(num_batch, num_res, num_res, device=s.device, dtype=torch.long)
 
         p_i = self.linear_s_p(s)                                  # [B, N, feat_dim]
         cross_node_feats = self._cross_concat(p_i, num_batch, num_res)  # [B, N, N, 2*feat_dim]

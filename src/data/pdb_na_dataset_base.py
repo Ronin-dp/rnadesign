@@ -91,6 +91,8 @@ class PDBNABaseDataset(Dataset):
             self.csv = eval_csv
             print (f"Validation: {len(self.csv)} examples with lengths {eval_lengths}.")
 
+        self._crop_len = getattr(self.data_conf.filtering, "crop_len", None)
+
     # cache make the same sample in same batch
     @fn.lru_cache(maxsize=100)
     def _process_csv_row(self, processed_file_path):
@@ -198,8 +200,11 @@ class PDBNABaseDataset(Dataset):
 
         # cleaner version
         final_feats = {
+            "aatype": torch.tensor(processed_feats["aatype"]).long(),
             "torsion_angles_sin_cos": chain_feats["torsion_angles_sin_cos"],
-            "is_na_residue_mask": processed_feats["is_na_residue_mask"]
+            "is_na_residue_mask": processed_feats["is_na_residue_mask"],
+            "chain_index": torch.tensor(processed_feats["chain_index"]).long(),
+            "residue_index": torch.tensor(processed_feats["residue_index"]).long()
         }
         if ss is not None:
             final_feats["ss"] = ss
@@ -235,22 +240,61 @@ class PDBNABaseDataset(Dataset):
             else:
                 converted_dict[key] = value  # For non-NumPy array and non-PyTorch tensor types
         return converted_dict
+
+    def _crop_sequence_feats(self, final_feats):
+        crop_len = self._crop_len
+        if crop_len is None:
+            return final_feats
+
+        seq_len = int(final_feats["aatype"].shape[0])
+        if seq_len <= crop_len:
+            return final_feats
+
+        if self.is_training:
+            crop_start = int(torch.randint(0, seq_len - crop_len + 1, (1,)).item())
+        else:
+            crop_start = (seq_len - crop_len) // 2
+        crop_end = crop_start + crop_len
+
+        cropped_feats = {}
+        for key, value in final_feats.items():
+            if key == "ss" and value is not None:
+                cropped_feats[key] = value[crop_start:crop_end, crop_start:crop_end]
+                continue
+
+            if torch.is_tensor(value) and value.ndim >= 1 and value.shape[0] == seq_len:
+                cropped_feats[key] = value[crop_start:crop_end]
+            else:
+                cropped_feats[key] = value
+
+        if "residue_index" in cropped_feats:
+            cropped_feats["residue_index"] = cropped_feats["residue_index"] - cropped_feats["residue_index"][0]
+
+        return cropped_feats
     
     def __getitem__(self, idx):
-        example_idx = idx
-        csv_row = self.csv.iloc[example_idx]
-        processed_file_path = csv_row["processed_path"]
-        final_feats = self._process_csv_row(processed_file_path) # get the features for this instance
+        csv_row = self.csv.iloc[idx]
 
-        # Convert all features to tensors.
+        processed_file_path = self._resolve_processed_file_path(csv_row)
+
+        final_feats = self._process_csv_row(processed_file_path)
+
         final_feats = tree.map_structure(
-            lambda x: x if torch.is_tensor(x) else torch.tensor(x), final_feats
+            lambda x: x if torch.is_tensor(x) else torch.tensor(x),
+            final_feats
         )
-        final_feats = du.pad_feats(final_feats, csv_row["modeled_na_seq_len"])
+
+        final_feats = self._crop_sequence_feats(final_feats)
+
+        target_len = int(final_feats["aatype"].shape[0])
+        final_feats = du.pad_feats(final_feats, target_len)
+
         final_feats = self.convert_dict_float64_items_to_float32(final_feats)
-        
+
+        final_feats["chain_index"] = final_feats["chain_index"].long()
+        final_feats["residue_index"] = final_feats["residue_index"].long()
+
         return final_feats
-    
     def __len__(self):
         return len(self.csv)
 

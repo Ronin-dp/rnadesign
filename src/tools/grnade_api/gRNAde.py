@@ -15,10 +15,10 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
-from rna_backbone_design.tools.grnade_api.src.data.featurizer import RNAGraphFeaturizer
-from rna_backbone_design.tools.grnade_api.src.models import AutoregressiveMultiGNNv1
-from rna_backbone_design.tools.grnade_api.src.data.data_utils import get_backbone_coords
-from rna_backbone_design.tools.grnade_api.src.constants import (
+from src.tools.grnade_api.src.data.featurizer import RNAGraphFeaturizer
+from src.tools.grnade_api.src.models import AutoregressiveMultiGNNv1
+from src.tools.grnade_api.src.data.data_utils import get_backbone_coords
+from src.tools.grnade_api.src.constants import (
     NUM_TO_LETTER, 
     RNA_ATOMS, 
     FILL_VALUE,
@@ -30,7 +30,7 @@ PROJECT_PATH = ""
 # Model checkpoint paths corresponding to data split and maximum no. of conformers
 CHECKPOINT_PATH = {
     'all': {
-        1: os.path.join("rna_backbone_design/tools/grnade_api/checkpoints/gRNAde_ARv1_1state_all.h5"),
+        1: os.path.join("src/tools/grnade_api/checkpoints/gRNAde_ARv1_1state_all.h5"),
         # 2: os.path.join(PROJECT_PATH, "checkpoints/gRNAde_ARv1_2state_all.h5"),
         # 3: os.path.join(PROJECT_PATH, "checkpoints/gRNAde_ARv1_3state_all.h5"),
         # 5: os.path.join(PROJECT_PATH, "checkpoints/gRNAde_ARv1_5state_all.h5"),

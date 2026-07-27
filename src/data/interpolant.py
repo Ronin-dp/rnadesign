@@ -143,8 +143,7 @@ class Interpolant:
         # apply corruptions to rotations
         rotmats_t = self._corrupt_rotmats(rotmats_1, t, res_mask)
         noisy_batch['rotmats_t'] = rotmats_t
-        
-        noisy_batch['ss'] = batch['ss']   
+          
 
         return noisy_batch
     
@@ -177,12 +176,14 @@ class Interpolant:
         
         return so3_utils.geodesic_t(scaling * d_t, rotmats_1, rotmats_t)
 
-    def sample(self, num_batch, num_res, model):
+    def sample(self, num_batch, num_res, model, extra_batch=None):
         """
         Params:
             num_batch : number of independent samples
             num_res : number of nucleotides to model
             model : the parameterised vector field (ie, the "denoiser")
+            extra_batch : optional extra conditioning features to pass to the model
+                during sampling, such as chain indices, residue indices, or ss.
 
         Returns:
             Generated backbone samples in the ATOM37 format
@@ -197,6 +198,9 @@ class Interpolant:
         batch = {
             'res_mask': res_mask,
         }
+        if extra_batch is not None:
+            for key, value in extra_batch.items():
+                batch[key] = value
 
         # get diffusion timesteps in order between [0, 1]
         ts = torch.linspace(self._cfg.min_t, 1.0, self._sample_cfg.num_timesteps)

@@ -10,7 +10,7 @@ import torch
 from beartype import beartype
 from Bio.PDB import Chain, Model, Structure
 
-# from rna_backbone_design import utils
+# from src import utils
 from src.data import (
     protein_constants,
     nucleotide_constants, 

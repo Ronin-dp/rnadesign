@@ -15,22 +15,22 @@ import torch.nn as nn
 from typing import Tuple, Sequence, Optional
 from functools import partial
 
-from rna_backbone_design.tools.rhofold_api.rhofold.model.primitives import Linear, LayerNorm
-from rna_backbone_design.tools.rhofold_api.rhofold.model.msa import (
+from src.tools.rhofold_api.rhofold.model.primitives import Linear, LayerNorm
+from src.tools.rhofold_api.rhofold.model.msa import (
     MSARowAttentionWithPairBias,
     MSAColumnAttention,
 )
-from rna_backbone_design.tools.rhofold_api.rhofold.model.outer_product_mean import OuterProductMean
-from rna_backbone_design.tools.rhofold_api.rhofold.model.pair import PairTransition
-from rna_backbone_design.tools.rhofold_api.rhofold.model.triangular_attention import (
+from src.tools.rhofold_api.rhofold.model.outer_product_mean import OuterProductMean
+from src.tools.rhofold_api.rhofold.model.pair import PairTransition
+from src.tools.rhofold_api.rhofold.model.triangular_attention import (
     TriangleAttention,
 )
-from rna_backbone_design.tools.rhofold_api.rhofold.model.triangular_update import (
+from src.tools.rhofold_api.rhofold.model.triangular_update import (
     TriangleMultiplicationOutgoing,
     TriangleMultiplicationIncoming,
 )
-from rna_backbone_design.tools.rhofold_api.rhofold.utils.chunk_utils import chunk_layer, ChunkSizeTuner
-from rna_backbone_design.tools.rhofold_api.rhofold.utils.tensor_utils import add
+from src.tools.rhofold_api.rhofold.utils.chunk_utils import chunk_layer, ChunkSizeTuner
+from src.tools.rhofold_api.rhofold.utils.tensor_utils import add
 
 class MSATransition(nn.Module):
     """

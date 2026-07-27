@@ -9,10 +9,10 @@ Code adapted from
 import torch
 import torch.nn.functional as F
 
-from rna_backbone_design.data import nucleotide_constants
-from rna_backbone_design.data import rigid_utils as ru
-from rna_backbone_design.data import vocabulary
-from rna_backbone_design.data.complex_constants import NUM_NA_TORSIONS, NUM_PROT_NA_TORSIONS
+from src.data import nucleotide_constants
+from src.data import rigid_utils as ru
+from src.data import vocabulary
+from src.data.complex_constants import NUM_NA_TORSIONS, NUM_PROT_NA_TORSIONS
 
 IDEALIZED_NA_ATOM_POS27 = torch.tensor(nucleotide_constants.nttype_atom27_rigid_group_positions)
 IDEALIZED_NA_ATOM_POS27_MASK = torch.any(IDEALIZED_NA_ATOM_POS27, axis=-1)

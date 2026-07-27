@@ -87,7 +87,7 @@ When you visit `data/rnasolo_proc/`, you should see a bunch of subdirectories re
 Your directory should now look like this:
 ```
 .
-├── rna_backbone_design
+├── src
 │   ├── analysis
 │   ├── data
 │   ├── experiments
@@ -186,7 +186,7 @@ If the above URL does not work, we have stored the RhoFold checkpoints in a Goog
 Go back to the project's root directory. Here is a minimal example of `EvalSuite` in action. The API takes care of the computation, storage, and management of local structural measurements as well as global metrics (desigability, diversity, and novelty). Set-up instructions can be found in `inference_se3_flows.py`.
 
 ```python
-from rna_backbone_design.analysis.evalsuite import EvalSuite
+from src.analysis.evalsuite import EvalSuite
 
 rna_bb_samples_dir = "generated_rna_bb_samples/" # generated samples for each sequence length
 saving_dir = "rna_eval_metrics" # save temp files and metrics

@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from rna_backbone_design.tools.rhofold_api.rhofold.model.rna_fm.modules import (
+from src.tools.rhofold_api.rhofold.model.rna_fm.modules import (
     TransformerLayer,
     AxialTransformerLayer,
     LearnedPositionalEmbedding,
@@ -19,7 +19,7 @@ from rna_backbone_design.tools.rhofold_api.rhofold.model.rna_fm.modules import (
     ContactPredictionHead
 )
 
-from rna_backbone_design.tools.rhofold_api.rhofold.model.rna_fm.axial_attention import RowSelfAttention, ColumnSelfAttention
+from src.tools.rhofold_api.rhofold.model.rna_fm.axial_attention import RowSelfAttention, ColumnSelfAttention
 
 # CJY copy from fairseq\modules\transformer_sentence_encoder.py for initialization
 def init_bert_params(module):

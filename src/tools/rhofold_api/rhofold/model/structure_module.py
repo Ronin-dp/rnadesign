@@ -13,10 +13,10 @@
 import math
 from typing import Optional, Tuple, Sequence
 
-from rna_backbone_design.tools.rhofold_api.rhofold.model.primitives import Linear, LayerNorm
-from rna_backbone_design.tools.rhofold_api.rhofold.utils.rigid_utils import Rigid
+from src.tools.rhofold_api.rhofold.model.primitives import Linear, LayerNorm
+from src.tools.rhofold_api.rhofold.utils.rigid_utils import Rigid
 
-from rna_backbone_design.tools.rhofold_api.rhofold.utils.tensor_utils import (
+from src.tools.rhofold_api.rhofold.utils.tensor_utils import (
     dict_multimap,
     permute_final_dims,
     flatten_final_dims,
@@ -26,8 +26,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
-from rna_backbone_design.tools.rhofold_api.rhofold.utils.alphabet import RNAAlphabet
-from rna_backbone_design.tools.rhofold_api.rhofold.utils.converter import RNAConverter
+from src.tools.rhofold_api.rhofold.utils.alphabet import RNAAlphabet
+from src.tools.rhofold_api.rhofold.utils.converter import RNAConverter
 
 class RefineNet(nn.Module):
     """"""

@@ -16,11 +16,11 @@ from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
 # external tools (gRNAde, RhoFold)
-from rna_backbone_design.tools.grnade_api.gRNAde import gRNAde
-from rna_backbone_design.tools.rhofold_api.rhofold.rf import RhoFold
-from rna_backbone_design.tools.rhofold_api.rhofold.config import rhofold_config
-from rna_backbone_design.tools.rhofold_api.rhofold.utils.alphabet import get_features
-from rna_backbone_design.analysis import metrics
+from src.tools.grnade_api.gRNAde import gRNAde
+from src.tools.rhofold_api.rhofold.rf import RhoFold
+from src.tools.rhofold_api.rhofold.config import rhofold_config
+from src.tools.rhofold_api.rhofold.utils.alphabet import get_features
+from src.analysis import metrics
 
 class EvalSuite:
     def __init__(self, 
@@ -98,7 +98,7 @@ class EvalSuite:
             self.gRNAde_module = gRNAde(split='all', max_num_conformers=1, gpu_id=gpu_id1)
             self.rhofold = RhoFold(rhofold_config)
             
-            RHOFOLD_CKPT = "./rna_backbone_design/tools/rhofold_api/checkpoints/Rhofold_pretrained.pt"
+            RHOFOLD_CKPT = "./src/tools/rhofold_api/checkpoints/Rhofold_pretrained.pt"
             self.rhofold.load_state_dict(torch.load(RHOFOLD_CKPT, map_location=torch.device('cpu'))['model'])
             self.rhofold.eval()
             self.device = f"cuda:{gpu_id2}"

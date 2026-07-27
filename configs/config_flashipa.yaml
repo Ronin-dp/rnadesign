@@ -3,6 +3,7 @@ data_cfg:
   filtering:
     max_len: 150
     min_len: 40
+    crop_len: 384
   min_t: 0.01
   samples_per_eval_length: 5
   num_eval_lengths: 10

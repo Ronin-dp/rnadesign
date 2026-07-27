@@ -1,7 +1,7 @@
 # RNA-FrameFlow
 data/**
 rebuttals/**
-rna_backbone_design/tools/rhofold_api/checkpoints/RhoFold_pretrained.pt
+src/tools/rhofold_api/checkpoints/RhoFold_pretrained.pt
 configs/*.ckpt
 camera_ready_ckpts/*.ckpt
 
@@ -177,7 +177,7 @@ cython_debug/
 TO_SHIFT_OUT_REPRO/**
 
 /all_rebuttal/**
-rna_backbone_design/tools/rhofold_api/checkpoints/**
+src/tools/rhofold_api/checkpoints/**
 
 # uv
 uv.lock

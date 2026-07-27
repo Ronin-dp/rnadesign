@@ -21,8 +21,8 @@ import math
 from scipy.stats import truncnorm
 import torch.nn as nn
 from typing import Optional, Callable, List, Sequence
-from rna_backbone_design.data.rigid_utils import Rigid
-from rna_backbone_design.data import all_atom
+from src.rigid_utils import Rigid
+from src.data import all_atom
 
 
 def permute_final_dims(tensor: torch.Tensor, inds: List[int]):

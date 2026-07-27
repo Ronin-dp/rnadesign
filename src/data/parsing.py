@@ -53,7 +53,7 @@ def structure_to_XCS(
     X, C, S = [], [], []
     atom_mask, chain_ids, b_factors, deoxy = [], [], [], []
 
-    chain_idx = 1
+    chain_index = 1
     last_res_idx = None
     for chain in model:
         if chain_id is not None and chain.id != chain_id:
@@ -105,7 +105,7 @@ def structure_to_XCS(
                     chain_ids.append(chain.id)
                     b_factors.append(np.zeros((constants.compact_atom_type_num,)))
                     X.append(np.zeros((constants.compact_atom_type_num, 3)))
-                    C.append(-chain_idx)
+                    C.append(-chain_index)
                     S.append(vocabulary.gap_token)
                     last_res_idx += 1
                 last_res_idx = res_idx
@@ -124,10 +124,10 @@ def structure_to_XCS(
             has_all_atoms = 1 if has_all_atoms else -1
 
             X.append(pos)
-            C.append(chain_idx * has_all_atoms)
+            C.append(chain_index * has_all_atoms)
             S.append(restype_idx)
 
-        chain_idx += 1
+        chain_index += 1
 
     X = torch.tensor(np.array(X))
     C = torch.tensor(np.array(C))

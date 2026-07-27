@@ -15,8 +15,8 @@ from typing import Optional
 import torch
 import torch.nn as nn
 import math
-from rna_backbone_design.tools.rhofold_api.rhofold.model.primitives import Linear, LayerNorm
-from rna_backbone_design.tools.rhofold_api.rhofold.utils.chunk_utils import chunk_layer
+from src.tools.rhofold_api.rhofold.model.primitives import Linear, LayerNorm
+from src.tools.rhofold_api.rhofold.utils.chunk_utils import chunk_layer
 
 
 class PairNet(nn.Module):

@@ -1,11 +1,11 @@
 import numpy as np
 import torch, os
 
-from rna_backbone_design.tools.rhofold_api.rhofold.rf import RhoFold
-from rna_backbone_design.tools.rhofold_api.rhofold.config import rhofold_config # NOTE: can remove this
-from rna_backbone_design.tools.rhofold_api.rhofold.utils.alphabet import get_features
+from src.tools.rhofold_api.rhofold.rf import RhoFold
+from src.tools.rhofold_api.rhofold.config import rhofold_config # NOTE: can remove this
+from src.tools.rhofold_api.rhofold.utils.alphabet import get_features
 
-CKPT = "./rna_backbone_design/tools/rhofold_api/checkpoints/RhoFold_pretrained.pt"
+CKPT = "./src/tools/rhofold_api/checkpoints/RhoFold_pretrained.pt"
 
 with torch.no_grad():
     model = RhoFold(rhofold_config)
@@ -21,7 +21,7 @@ with torch.no_grad():
     outputs = model(tokens=data_dict['tokens'].to(device), rna_fm_tokens=data_dict['rna_fm_tokens'].to(device), seq=data_dict['seq'])
     
     output = outputs[-1]
-    output_dir = "rna_backbone_design/tools/rhofold_api/sample3_pdb_pred"
+    output_dir = "src/tools/rhofold_api/sample3_pdb_pred"
     os.makedirs(output_dir, exist_ok=True)
     unrelaxed_model = os.path.join(output_dir, 'unrelaxed_sample3_model.pdb')
     node_cords_pred = output['cord_tns_pred'][-1].squeeze(0)

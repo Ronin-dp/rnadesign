@@ -6,7 +6,7 @@ import itertools
 from Bio import SeqIO
 from typing import List, Tuple
 
-from rna_backbone_design.tools.rhofold_api.rhofold.model.rna_fm.data import Alphabet, get_rna_fm_token, BatchConverter, RawMSA
+from src.tools.rhofold_api.rhofold.model.rna_fm.data import Alphabet, get_rna_fm_token, BatchConverter, RawMSA
 
 rna_msaseq_toks = {'toks': ['A','U','G','C','-']}
 

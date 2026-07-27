@@ -7,7 +7,7 @@ https://github.com/microsoft/protein-frame-flow/blob/main/models/node_embedder.p
 
 import torch
 from torch import nn
-from rna_backbone_design.models import utils
+from src.models import utils
 
 class NodeEmbedder(nn.Module):
 
@@ -17,6 +17,8 @@ class NodeEmbedder(nn.Module):
         self.c_s = self._cfg.c_s
         self.c_pos_emb = self._cfg.c_pos_emb
         self.c_timestep_emb = self._cfg.c_timestep_emb
+        self.aatype_embed = nn.Embedding(num_embeddings=34, embedding_dim=self.c_s)
+        
         self.linear = nn.Linear(
             self._cfg.c_pos_emb + self._cfg.c_timestep_emb, self.c_s)
 
@@ -28,7 +30,7 @@ class NodeEmbedder(nn.Module):
         )[:, None, :].repeat(1, mask.shape[1], 1)
         return timestep_emb * mask.unsqueeze(-1)
 
-    def forward(self, timesteps, mask):
+    def forward(self, timesteps, mask, aatype=None, use_aatype=False):
         # s: [b]
 
         b, num_res, device = mask.shape[0], mask.shape[1], mask.device
@@ -45,4 +47,12 @@ class NodeEmbedder(nn.Module):
         input_feats = [pos_emb]
         # timesteps are between 0 and 1. Convert to integers.
         input_feats.append(self.embed_t(timesteps, mask))
-        return self.linear(torch.cat(input_feats, dim=-1))
+        node_embed = self.linear(torch.cat(input_feats, dim=-1))
+
+        if use_aatype and aatype is not None:
+            aatype_embed = self.aatype_embed(aatype.long().clamp(min=0, max=self.aatype_embed.num_embeddings - 1))
+            node_embed = node_embed + aatype_embed * mask.unsqueeze(-1)
+
+        return node_embed
+
+    

@@ -105,7 +105,7 @@ class FlowModule(LightningModule):
                             torch.ones_like(is_na_residue_mask),
                             torsions=gt_torsions_1
                         )
-        gt_bb_atoms = gt_bb_atoms[:, :, bb_filtered_atom_idx]
+        gt_bb_atoms = gt_bb_atoms[:, :, bb_filtered_atom_idx]  #[B,N,K,3]
 
         # Timestep used for normalization.
         t = noisy_batch['t']
@@ -209,11 +209,22 @@ class FlowModule(LightningModule):
         self.interpolant.set_device(res_mask.device)
         num_batch = res_mask.shape[0]
         num_res = is_na_residue_mask.sum(dim=-1).max().item()
-        
+
+        extra_batch = {}
+        if 'chain_index' in batch:
+            extra_batch['chain_index'] = batch['chain_index']
+
+        if 'residue_index' in batch:
+            extra_batch['residue_index'] = batch['residue_index']
+
+        if 'ss' in batch:
+            extra_batch['ss'] = batch['ss']
+
         samples = self.interpolant.sample(
             num_batch,
             num_res,
             self.model,
+            extra_batch=extra_batch if len(extra_batch) > 0 else None,
         )[0][-1].numpy()
 
         batch_metrics = []
@@ -291,6 +302,8 @@ class FlowModule(LightningModule):
         step_start_time = time.time()
         self.interpolant.set_device(batch['res_mask'].device)
         noisy_batch = self.interpolant.corrupt_batch(batch)
+        if 'aatype' in noisy_batch:
+            noisy_batch['use_aatype'] = random.random() > 0.5
 
         if self._interpolant_cfg.self_condition and random.random() > 0.5:
             with torch.no_grad():
@@ -353,13 +366,27 @@ class FlowModule(LightningModule):
         interpolant = Interpolant(self._infer_cfg.interpolant) 
         interpolant.set_device(device)
 
+        extra_batch = {}
+        if 'chain_index' in batch:
+            extra_batch['chain_index'] = batch['chain_index'].to(device)
+        if 'residue_index' in batch:
+            extra_batch['residue_index'] = batch['residue_index'].to(device)
+        if 'ss' in batch:
+            extra_batch['ss'] = batch['ss'].to(device)
+        sample_id = batch['sample_id'].item()
+
         sample_length = batch['num_res'].item()
         diffuse_mask = torch.ones(1, sample_length).long().unsqueeze(0)
         sample_id = batch['sample_id'].item()
         sample_dir = os.path.join(self._output_dir, f'length_{sample_length}')
         os.makedirs(sample_dir, exist_ok=True)
 
-        atom37_traj, _, _ = interpolant.sample(1, sample_length, self.model)
+        atom37_traj, _, _ = interpolant.sample(
+            1,
+            sample_length,
+            self.model,
+            extra_batch=extra_batch if len(extra_batch) > 0 else None,
+        )
         bb_traj = du.to_numpy(torch.concat(atom37_traj, dim=0)) # convert from torch to numpy for easier processing
 
         sample = bb_traj[-1] # store last state (at the final ODESolve timestep) as completed sample

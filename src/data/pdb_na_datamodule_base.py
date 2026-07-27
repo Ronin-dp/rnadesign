@@ -8,7 +8,7 @@ from pytorch_lightning import LightningDataModule
 from torch.utils.data.distributed import DistributedSampler, dist
 from torch.utils.data import DataLoader
 
-from rna_backbone_design.data.pdb_na_dataset_base import PDBNABaseDataset
+from src.data.pdb_na_dataset_base import PDBNABaseDataset
 
 class PDBNABaseDataModule(LightningDataModule):
     def __init__(self, data_cfg, inference_cfg=None):
@@ -125,13 +125,20 @@ class RNALengthBatcher:
         if len(self._data_csv) > self.num_replicas:
             replica_csv = self._data_csv.iloc[
                 indices[self.rank::self.num_replicas]
-            ]
+            ].copy()
         else:
-            replica_csv = self._data_csv
+            replica_csv = self._data_csv.copy()
+
+        crop_len = getattr(self._sampler_cfg.filtering, "crop_len", None)
+        if crop_len is not None:
+            replica_csv["effective_len"] = replica_csv["modeled_na_seq_len"].clip(upper=crop_len)
+            group_col = "effective_len"
+        else:
+            group_col = "modeled_na_seq_len"
         
         # Each batch contains multiple RNA of the same length.
         sample_order = []
-        for seq_len, len_df in replica_csv.groupby('modeled_na_seq_len'):
+        for seq_len, len_df in replica_csv.groupby(group_col):
             if self._sampler_cfg.linear_effect:
                 max_batch_size = min(
                     self.max_batch_size,

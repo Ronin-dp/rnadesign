@@ -1,18 +1,11 @@
-"""
-Neural network architecture for the flow model.
-
-Code adapted from
-https://github.com/microsoft/protein-frame-flow/blob/main/models/flow_model.py
-"""
-
 import torch
 from torch import nn
 
-from rna_backbone_design.models.node_embedder import NodeEmbedder
-from rna_backbone_design.models import torsion_net
-from rna_backbone_design.data import utils as du
-from rna_backbone_design.models.ipa_pytorch import InvariantPointAttention, StructureModuleTransition, BackboneUpdate, EdgeTransition, Linear
-from rna_backbone_design.models.edge_embedder import EdgeEmbedder
+from src.models.node_embedder import NodeEmbedder
+from src.models import torsion_net
+from src.data import utils as du
+from src.models.ipa_pytorch import InvariantPointAttention, StructureModuleTransition, BackboneUpdate, EdgeTransition, Linear
+from src.models.edge_embedder import EdgeEmbedder
 
 from flash_ipa.utils import check_config_ipa
 from flash_ipa.edge_embedder import EdgeEmbedder as FlashEdgeEmbedder
@@ -98,19 +91,33 @@ class FlowModel(nn.Module):
         continuous_t = input_feats['t']
         trans_t = input_feats['trans_t']
         rotmats_t = input_feats['rotmats_t']
+        chain_index = input_feats['chain_index']
+        residue_index = input_feats['residue_index']
+        aatype = input_feats.get('aatype', None)
+        use_aatype = bool(input_feats.get('use_aatype', False)) and aatype is not None
+        ss = input_feats.get('ss', None)
         if 'trans_sc' not in input_feats:
             trans_sc = torch.zeros_like(trans_t)
         else:
             trans_sc = input_feats['trans_sc']
 
         # Initialize node and edge embeddings
-        init_node_embed = self.node_embedder(continuous_t, node_mask)
+        init_node_embed = self.node_embedder(
+            continuous_t,
+            node_mask,
+            aatype=aatype,
+            use_aatype=use_aatype,
+        ) #256
         init_node_embed = init_node_embed * node_mask[..., None]
         node_embed = init_node_embed * node_mask[..., None]
 
         # Compute edge embeddings from node embeddings and translations
         if self.use_flashipa:
-            edge_embed, z_factor_1, z_factor_2, edge_mask = self.edge_embedder(init_node_embed, trans_t, trans_sc, node_mask)
+            if ss is None:
+                raise ValueError(
+                    "FlowModel.forward requires 'ss' when use_flashipa=True."
+                )
+            edge_embed, z_factor_1, z_factor_2, edge_mask = self.edge_embedder(init_node_embed, trans_t, trans_sc, node_mask, chain_index, residue_index, ss)
         else:
             edge_mask = node_mask[:, None] * node_mask[:, :, None]
             edge_embed = self.edge_embedder(init_node_embed, trans_t, trans_sc, edge_mask)

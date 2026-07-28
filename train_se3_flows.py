@@ -10,7 +10,6 @@ import torch
 import hydra
 from omegaconf import DictConfig, OmegaConf
 
-from pytorch_lightning.loggers.wandb import WandbLogger
 from pytorch_lightning.trainer import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint, Timer
 
@@ -18,7 +17,6 @@ from src.data.pdb_na_datamodule_base import PDBNABaseDataModule
 from src.models.flow_module import FlowModule
 from src.models.callback import NanGradientCallback
 import src.utils as eu
-import wandb
 
 log = eu.get_pylogger(__name__)
 torch.set_float32_matmul_precision('high')
@@ -33,33 +31,29 @@ class Experiment:
  
     def train(self):
         callbacks = []
-        
+
         if self._exp_cfg.debug:
             log.info("Debug mode.")
-            logger = None
             self._exp_cfg.num_devices = 1
-            self._data_cfg.loader.num_workers = 0
-        else:
-            logger = WandbLogger(**self._exp_cfg.wandb,)
-            
-            # Checkpoint directory
-            ckpt_dir = self._exp_cfg.checkpointer.dirpath
-            os.makedirs(ckpt_dir, exist_ok=True)
-            log.info(f"Checkpoints saved to {ckpt_dir}")
-            
-            # Model checkpoints
-            callbacks.append(ModelCheckpoint(**self._exp_cfg.checkpointer))
-            callbacks.append(Timer(duration=self._exp_cfg.trainer.max_time))
-            callbacks.append(NanGradientCallback())
-            
-            # Save config
-            cfg_path = os.path.join(ckpt_dir, 'config.yaml')
-            with open(cfg_path, 'w') as f:
-                OmegaConf.save(config=self._cfg, f=f.name)
-            cfg_dict = OmegaConf.to_container(self._cfg, resolve=True)
-            flat_cfg = dict(eu.flatten_dict(cfg_dict))
-            if isinstance(logger.experiment.config, wandb.sdk.wandb_config.Config):
-                logger.experiment.config.update(flat_cfg)
+            if hasattr(self._data_cfg, "loader"):
+                self._data_cfg.loader.num_workers = 0
+
+        # Checkpoint directory
+        ckpt_dir = self._exp_cfg.checkpointer.dirpath
+        os.makedirs(ckpt_dir, exist_ok=True)
+        log.info(f"Checkpoints saved to {ckpt_dir}")
+
+        # Model checkpoints
+        callbacks.append(ModelCheckpoint(**self._exp_cfg.checkpointer))
+        max_time = getattr(self._exp_cfg.trainer, "max_time", None)
+        if max_time is not None:
+            callbacks.append(Timer(duration=max_time))
+        callbacks.append(NanGradientCallback())
+
+        # Save config
+        cfg_path = os.path.join(ckpt_dir, 'config.yaml')
+        with open(cfg_path, 'w') as f:
+            OmegaConf.save(config=self._cfg, f=f.name)
 
         devices = GPUtil.getAvailable(order='memory', limit = 8)[:self._exp_cfg.num_devices]
         log.info(f"Using devices: {devices}")
@@ -67,7 +61,7 @@ class Experiment:
         trainer = Trainer(
             **self._exp_cfg.trainer,
             callbacks=callbacks,
-            logger=logger,
+            logger=False,
             use_distributed_sampler=False,
             enable_progress_bar=True,
             enable_model_summary=True,

@@ -7,7 +7,6 @@ import torch
 import time
 import os
 import random
-import wandb
 import numpy as np
 import pandas as pd
 import logging
@@ -23,7 +22,6 @@ from src.data import all_atom as rna_all_atom
 from src.data import so3_utils
 from src.data import nucleotide_constants
 from src.analysis import utils as au
-from pytorch_lightning.loggers.wandb import WandbLogger
 
 class FlowModule(LightningModule):
     def __init__(self, cfg, folding_cfg=None):
@@ -43,7 +41,6 @@ class FlowModule(LightningModule):
         os.makedirs(self._sample_write_dir, exist_ok=True)
 
         self.validation_epoch_metrics = []
-        self.validation_epoch_samples = []
         self.save_hyperparameters()
         
     def on_train_start(self):
@@ -231,16 +228,12 @@ class FlowModule(LightningModule):
 
         for i in range(num_batch):
             final_pos = samples[i]
-            saved_rna_path = au.write_complex_to_pdbs( # Save RNA atoms to PDB
+            au.write_complex_to_pdbs( # Save RNA atoms to PDB
                 final_pos,
                 os.path.join(self._sample_write_dir, f'sample_{i}_idx_{batch_idx}_len_{num_res}.pdb'),
                 is_na_residue_mask=is_na_residue_mask.detach().cpu().numpy()[i],
                 # no_indexing=True
             )
-            if isinstance(self.logger, WandbLogger):
-                self.validation_epoch_samples.append(
-                    [saved_rna_path, self.global_step, wandb.Molecule(saved_rna_path)]
-                )
 
             c4_idx = nucleotide_constants.atom_order["C4\'"]
             rna_c4_c4_matrics = metrics.calc_rna_c4_c4_metrics(final_pos[:, c4_idx])
@@ -250,13 +243,6 @@ class FlowModule(LightningModule):
         self.validation_epoch_metrics.append(batch_metrics)
         
     def on_validation_epoch_end(self):
-        if len(self.validation_epoch_samples) > 0:
-            self.logger.log_table(
-                key='valid/samples',
-                columns=["sample_path", "global_step", "RNA"],
-                data=self.validation_epoch_samples)
-            self.validation_epoch_samples.clear()
-
         val_epoch_metrics = pd.concat(self.validation_epoch_metrics)
         
         for metric_name, metric_val in val_epoch_metrics.mean().to_dict().items():

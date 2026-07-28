@@ -21,7 +21,7 @@ import math
 from scipy.stats import truncnorm
 import torch.nn as nn
 from typing import Optional, Callable, List, Sequence
-from src.rigid_utils import Rigid
+from src.data.rigid_utils import Rigid
 from src.data import all_atom
 
 

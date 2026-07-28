@@ -1,0 +1,37 @@
+defaults:
+  - config
+  - _self_
+
+data_cfg:
+  csv_path: test1/rna_metadata.csv
+  filtering:
+    max_len: 384
+    min_len: 40
+    crop_len: 384
+  linear_effect: False
+  loader:
+    num_workers: 0
+  batch_size: 1
+  max_batch_size: 1
+  eval_batch_size: 1
+  num_workers: 0
+  prefetch_factor: 2
+  samples_per_eval_length: 1
+  num_eval_lengths: 1
+  max_squared_res: 375000
+  max_num_res_squared: 375000
+
+experiment:
+  debug: False
+  num_devices: 1
+  trainer:
+    strategy: auto
+    max_time: "00:20:00:00"
+    max_epochs: 1
+    check_val_every_n_epoch: 1
+    limit_train_batches: 1
+    limit_val_batches: 1
+    log_every_n_steps: 1
+    accelerator: gpu
+  checkpointer:
+    dirpath: ckpt/test1_smoke

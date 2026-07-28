@@ -56,7 +56,6 @@ dependencies = [
     "biotite>=1.2.0",
     "einops>=0.8.1",
     "ml-collections>=1.0.0",
-    "wandb>=0.19.0",
     "hatchling>=1.27.0",
     "editables>=0.5",
     "setuptools>=78.1.0",

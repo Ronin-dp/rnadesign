@@ -1,8 +1,8 @@
 data_cfg:
-  csv_path: metadata/rna_metadata.csv # CSV for path and metadata to training examples
+  csv_path: test1/rna_metadata.csv # CSV for path and metadata to training examples
   filtering:
-    max_len: 150
-    min_len: 40
+    max_len: 6000
+    min_len: 0
     crop_len: 384
   min_t: 0.01
   samples_per_eval_length: 5
@@ -85,16 +85,11 @@ experiment:
     aux_loss_t_pass: 0.25
     tors_loss_scale: 1.0
     num_non_frame_atoms: 0 # choose from [0, 3, 7]
-  wandb:
-    name: rna-frameflow
-    project: se3-fm
-    save_code: false
-    tags: []
-    mode: "online" # can also save to `offline`
   optimizer:
     lr: 0.0001
   trainer:
     overfit_batches: 0
+    max_time: null
     # max_steps: 120000
     # min_steps: 1
     min_epochs: 1
@@ -106,7 +101,7 @@ experiment:
     check_val_every_n_epoch: 20
     accumulate_grad_batches: 1
   checkpointer:
-    dirpath: ckpt/${experiment.wandb.project}/${experiment.wandb.name}/
+    dirpath: ckpt/se3-fm/rna-frameflow/
     save_last: True
     save_top_k: 3
     monitor: train/loss

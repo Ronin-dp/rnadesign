@@ -17,4 +17,4 @@ pip install mdtraj
 pip install graphein
 
 # misc
-pip install wandb hydra-colorlog rootutils rich matplotlib networkx gputil omegaconf beartype jaxtyping dm-tree tmtools POT iminuit tmscoring biotite einops ml_collections
+pip install hydra-colorlog rootutils rich matplotlib networkx gputil omegaconf beartype jaxtyping dm-tree tmtools POT iminuit tmscoring biotite einops ml_collections
